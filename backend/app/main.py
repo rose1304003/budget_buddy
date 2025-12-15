@@ -1,20 +1,27 @@
 """FastAPI application main module."""
 from __future__ import annotations
-from backend.app.telegram_webhook import router as telegram_router
-app.include_router(telegram_router)
-import os
-from fastapi import FastAPI
+
 from datetime import datetime, timedelta
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, func
 
+from backend.app.telegram_webhook import router as telegram_router
+
 from .settings import settings
 from .db import init_db, get_session
 from .deps import get_current_user
 from .models import User, Category, Transaction
-from .schemas import MeOut, CategoryCreate, CategoryOut, CategoryUpdate, TxCreate, TxOut, StatsOut
+from .schemas import (
+    MeOut,
+    CategoryCreate,
+    CategoryOut,
+    CategoryUpdate,
+    TxCreate,
+    TxOut,
+    StatsOut,
+)
 from .seed import ensure_seed
 from .middleware import (
     RateLimitMiddleware,
@@ -22,7 +29,11 @@ from .middleware import (
     SecurityHeadersMiddleware,
 )
 
+# ✅ Create app FIRST
 app = FastAPI(title=settings.app_name)
+
+# ✅ Include Telegram router AFTER app is created
+app.include_router(telegram_router)
 
 # CORS Middleware
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
@@ -154,10 +165,10 @@ def update_category(
     c = session.get(Category, category_id)
     if not c or c.user_id != user.id:
         raise HTTPException(status_code=404, detail="Category not found")
-    
+
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(c, k, v)
-    
+
     session.add(c)
     session.commit()
     session.refresh(c)
