@@ -4,6 +4,9 @@ from backend.app.telegram_webhook import router as telegram_router
 app.include_router(telegram_router)
 
 from __future__ import annotations
+
+import os
+from fastapi import FastAPI
 from datetime import datetime, timedelta
 
 from fastapi import Depends, FastAPI, HTTPException, status
